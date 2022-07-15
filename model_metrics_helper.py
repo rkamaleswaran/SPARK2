@@ -468,4 +468,58 @@ def metrics_by_bed_loc(result, mode = 1, label = "PredictedSepsisLabel"):
         elif mode == 2:
             cf_matrix, matrix, alarms_result = metric_two(group, title = name, label = label)
     return cf_matrix, matrix, alarms_result
+
+
+def plot_median_first_alert_time(final_df_w_poa, final_df_no_poa_1, final_df_no_poa_12, data_sources, plot_thresholds):
+    """
+    Code for plotting medan first alert time
+    
+    """
+    
+    plot_thresholds = ['ML_' + str(threshold)if threshold not in ['SIRS', 'MEWS'] 
+                           else threshold for threshold in plot_thresholds]
+    
+    select_cols = ['Threshold', 'Median_First_Alert_Time_From_TimeZero', 'ppv']
+    
+    final_df_w_poa = final_df_w_poa[final_df_w_poa.Threshold.isin(plot_thresholds)][select_cols]
+    final_df_w_poa['Data Source'] = data_sources[0]
+    
+    final_df_no_poa_1 = final_df_no_poa_1[final_df_no_poa_1.Threshold.isin(plot_thresholds)][select_cols]
+    final_df_no_poa_1['Data Source'] = data_sources[1]
+    
+    final_df_no_poa_12 = final_df_no_poa_12[final_df_no_poa_12.Threshold.isin(plot_thresholds)][select_cols]
+    final_df_no_poa_12['Data Source'] = data_sources[2]
+    
+    plot_df = pd.concat([final_df_w_poa, final_df_no_poa_1, final_df_no_poa_12], axis=0)
+    plot_df.rename(columns={'Threshold':'SepsisAlertMethod'}, inplace=True)
+    plot_df['ppv'] = plot_df['ppv']*100
+    
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    import math
+    sns.set_style("white")
+    sns.color_palette("pastel")
+    fig = plt.figure(figsize=(15, 10)) 
+    ax = sns.barplot(x = 'Median_First_Alert_Time_From_TimeZero', y = 'SepsisAlertMethod', hue='Data Source',
+                data = plot_df, palette = "Set2", edgecolor='black')
+    plt.axvline(0, color='red', linewidth = 2, linestyle='solid', label='Time Zero')
+    plt.xlabel('Median First Sepsis Alert to/From Time Zero (Hours)', size=18), plt.ylabel('Sepsis Alert Method', size=18)
+    plt.xticks(np.arange(math.ceil(plot_df['Median_First_Alert_Time_From_TimeZero'].min()) 
+                         + -1, plot_df['Median_First_Alert_Time_From_TimeZero'].max() + 1, 2))
+    plt.legend(title="Inclusion Criteria", fontsize=14, title_fontsize=14)
+    plt.xticks(fontsize=14), plt.yticks(fontsize=14)
+    plt.title('Median First Sepsis Alert Time to/from Time Zero', fontweight="bold", size=20)
+    
+    for ppv, p in zip(plot_df['ppv'].tolist(), ax.patches):
+        if p.get_width() < 0:
+            add_x = -0.6
+        else:
+            add_x = 0.6
+        ax.annotate(str(format(ppv, '.1f')) + '%\nPPV', 
+                    (p.get_width() + add_x, p.get_y() + (p.get_height()/ 2)), ha = 'center', 
+                    va = 'center', fontsize=8, fontweight='bold')
+    plt.margins(x=0.05, y=0.01)
+    plt.tight_layout()
+    plt.grid()
+    plt.show() 
             
