@@ -24,7 +24,7 @@ def upload(url, username, password, output):
 sep_index = ['BaseExcess', 'HCO3', 'FiO2', 'pH', 'PaCO2', 'SaO2', 'AST',
              'BUN', 'Alkalinephos', 'Calcium', 'Chloride', 'Creatinine',
              'Glucose', 'Lactate', 'Magnesium', 'Phosphate', 'Potassium',
-             'Bilirubin_total', 'Hct', 'Hgb', 'PTT', 'WBC', 'Platelets']
+             'Bilirubin_total', 'Hct', 'Hgb', 'PTT', 'WBC', 'Platelets', 'Sodium', 'PaO2']
 con_index = ['HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2']
 
 demographics = ["age", "gender"]
@@ -79,22 +79,23 @@ def feature_informative_missingness(patient, sep_columns = con_index + sep_index
         f1_name = sep_column + "_interval_f1"
         f2_name = sep_column + "_interval_f2"
         diff_name = sep_column + "_diff"
-
+        
         patient.loc[nonmissing_idx,f1_name] = np.arange(1,len(nonmissing_idx)+1)
         patient[f1_name] = patient[f1_name].ffill().fillna(0)
 
         v = (0+patient[sep_column].isna()).replace(0,np.nan)
         cumsum = v.cumsum().fillna(method='pad')
         reset = -cumsum[v.isnull()].diff().fillna(cumsum)
-        patient[f2_name] = v.where(v.notnull(), reset).cumsum().fillna(0)
+        patient.loc[:,f2_name] = v.where(v.notnull(), reset).cumsum().fillna(0)
         
         if nonmissing_idx==[]:
             patient.loc[:, f2_name] = -1
         else:
             patient.loc[:nonmissing_idx[0]-1, f2_name] = -1
         
-        patient[diff_name] = patient.loc[nonmissing_idx, sep_column].diff()
-        patient[diff_name] = patient[diff_name].fillna(method = "ffill")    
+        patient.loc[:,diff_name] = patient.loc[nonmissing_idx, sep_column].diff()
+        
+        patient.loc[:,diff_name] = patient[diff_name].fillna(method = "ffill")    
             
         
     return patient
@@ -130,8 +131,29 @@ def feature_slide_window(vitals):
     
     return rolling_vitals
 
+
+
+
+def SIRS(data):
+    
+    # calculates SIRS score
+    
+    temp = data[["csn", "pat_id", "rel_time", "HR", "Resp", "Temp", "WBC"]].copy()
+    temp["tachycardia"] = (temp["HR"] > 90)
+    temp["tachypnea"] = (temp["Resp"] > 20)
+    temp["fever/hypothermia"] = (temp["Temp"] > 38) |(temp["Temp"] < 36)
+    temp["wbc"] = (temp["WBC"] > 12) | (temp["WBC"] < 4)
+    temp.fillna(0)
+    temp["SIRS"] = temp[["tachycardia", "tachypnea", "fever/hypothermia", "wbc"]].sum(axis = 1)
+    
+    return (temp["SIRS"] >=2).values
+
+
+
+
 def feature_empiric_score(temp):
     
+    #temp = dat.copy()
     
     # HEART RATE SCORING
     temp["HR_score"] = 0
@@ -220,6 +242,29 @@ def feature_empiric_score(temp):
     temp.loc[mask, "Bilirubin_score"] = 0
     temp.loc[temp["Bilirubin_total"].isna(),"Bilirubin_score"] = np.nan
     
+    #temp["SIRS"] = SIRS(temp)
+    #temp["tachycardia"] = 0
+    #mask = (temp["HR"] > 90)
+    #temp.loc[mask,"tachycardia"] = 1
+    
+    #temp["tachypnea"] = 0
+    #mask = (temp["Resp"] > 20)
+    #temp.loc[mask,"tachypnea"] = 1
+
+    #temp["fever/hypothermia"] = 0
+    #mask = (temp["Temp"] > 38) |(temp["Temp"] < 36)
+    #temp.loc[mask, "fever/hypothermia"] = 1
+    
+    #temp["wbc"] = 0
+    #mask = (temp["WBC"] > 12) | (temp["WBC"] < 4)
+    #temp.loc[mask, "wbc"] = 1
+
+    #temp["SIRS"] = temp[["tachycardia", "tachypnea", "fever/hypothermia", "wbc"]].sum(axis = 1)
+    #temp = temp.drop(["tachycardia", "fever/hypothermia", "wbc",  "tachypnea"], axis = 1) 
+    
+    
+    
+    
     return(temp)
 
 
@@ -267,20 +312,6 @@ def preprocess(df_process):
 
 
 
-def downsample(x):
-    
-    pos = x[x["SepsisLabel"] == 1]
-    neg = x[x["SepsisLabel"] == 0]
-    
-    if len(pos) < len(neg):
-        neg = neg.sample(n=len(pos), replace = False, random_state = 10002)
-        
-    new = pos.append(neg)
-    new = new.sample(frac = 1, replace = False)
-    
-    return new
-
-
 def load_model_predict(X_test, k_fold, path):
     #"ensemble the five XGBoost models by averaging their output probabilities"
 
@@ -316,7 +347,7 @@ def predict(data_set,
     feature_names = np.array(new_set.columns)
     
     predict_pro, shaps, exp = load_model_predict(features, k_fold = 5, path = './' + model_path + '/')
-
+    output_img_df = pd.DataFrame(columns = {"csn", "pat_id", "los", "content_type", "run_date", "run_date_relative", "img_content"})
     for i in range(0, len(new_set)):
         shap.force_plot(exp, shaps[i,:], new_set.iloc[i,:], matplotlib = True, show = False)
             
@@ -336,7 +367,7 @@ def predict(data_set,
         output["run_date_relative"] = str(patient_df.iloc[i, 3])
         output["img_content"] = encoded_string
         upload(url = "https://prd-rta-app01.eushc.org:8443/ords/rta/sepsisml/imgcache", username = 'Sepsis_ML', password = 'jfVDS756F$jkf&@*', output = json.dumps(output))
-        
+        #output_img_df.loc[i] = output
         
     ### TOP 10 MOST **POSITIVIE** IMPACT ### -- change if needed
     hist_times = hist_data[list(feature_names)].values
@@ -354,7 +385,7 @@ def predict(data_set,
     for a,b in zip(top_10_features,top_10_hist_times):
         top_10_str = ''
         for i,j in zip(a,b):
-            top_10_str += i+ " (" +str(j) + "), "
+            top_10_str += i+ "(" +str(j) + "), "
         top_10_str_list.append([top_10_str])
   
     
@@ -368,6 +399,6 @@ def predict(data_set,
     temp_result["PredictedSepsisLabel"] = PredictedLabel
     temp_result["ranked_shap"] = pd.Series(list(ranked_shap)).astype(str)
     temp_result["shap"] = pd.Series(top_10_str_list)
-
+    #output_img_df.to_csv("img_output_debug.csv", index= False)
     return temp_result
         
