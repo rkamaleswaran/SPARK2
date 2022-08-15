@@ -8,6 +8,54 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
+total_feature_list = feature_list = ['HR','O2Sat','Temp','SBP','DBP','MAP','Resp','EtCO2',\
+                'AST','Alkalinephos','BUN','BaseExcess','Bilirubin_total',\
+                'Calcium','Chloride','Creatinine','FiO2','Glucose',\
+                'HCO3','Hct','Hgb','Lactate','Magnesium',\
+                'PTT', 'PaCO2','PaO2','Phosphate','Platelets','Potassium',\
+                'SaO2','Sodium','WBC','pH',\
+                'gcs_total_score','age','is_female',\
+                'HR_interval_f1','HR_interval_f2','HR_diff',\
+                'O2Sat_interval_f1','O2Sat_interval_f2','O2Sat_diff',\
+                'Temp_interval_f1','Temp_interval_f2','Temp_diff',\
+                'SBP_interval_f1','SBP_interval_f2','SBP_diff',\
+                'MAP_interval_f1','MAP_interval_f2','MAP_diff',\
+                'DBP_interval_f1','DBP_interval_f2','DBP_diff',\
+                'Resp_interval_f1','Resp_interval_f2','Resp_diff',\
+                'EtCO2_interval_f1','EtCO2_interval_f2','EtCO2_diff',\
+                'AST_interval_f1','AST_interval_f2','AST_diff',\
+                'Alkalinephos_interval_f1','Alkalinephos_interval_f2','Alkalinephos_diff',\
+                'BUN_interval_f1','BUN_interval_f2','BUN_diff',\
+                'BaseExcess_interval_f1','BaseExcess_interval_f2','BaseExcess_diff',\
+                'Bilirubin_total_interval_f1','Bilirubin_total_interval_f2','Bilirubin_total_diff',\
+                'Calcium_interval_f1','Calcium_interval_f2','Calcium_diff',\
+                'Chloride_interval_f1','Chloride_interval_f2','Chloride_diff',\
+                'Creatinine_interval_f1','Creatinine_interval_f2','Creatinine_diff',\
+                'FiO2_interval_f1','FiO2_interval_f2','FiO2_diff',\
+                'Glucose_interval_f1','Glucose_interval_f2','Glucose_diff',\
+                'HCO3_interval_f1','HCO3_interval_f2','HCO3_diff',\
+                'Hct_interval_f1','Hct_interval_f2','Hct_diff',\
+                'Hgb_interval_f1','Hgb_interval_f2','Hgb_diff',\
+                'Lactate_interval_f1','Lactate_interval_f2','Lactate_diff',\
+                'Magnesium_interval_f1','Magnesium_interval_f2','Magnesium_diff',\
+                'PTT_interval_f1','PTT_interval_f2','PTT_diff',\
+                'PaCO2_interval_f1','PaCO2_interval_f2','PaCO2_diff',\
+                'PaO2_interval_f1','PaO2_interval_f2','PaO2_diff',\
+                'Phosphate_interval_f1','Phosphate_interval_f2','Phosphate_diff',\
+                'Platelets_interval_f1','Platelets_interval_f2','Platelets_diff',\
+                'Potassium_interval_f1','Potassium_interval_f2','Potassium_diff',\
+                'SaO2_interval_f1','SaO2_interval_f2','SaO2_diff',\
+                'Sodium_interval_f1','Sodium_interval_f2','Sodium_diff',\
+                'WBC_interval_f1','WBC_interval_f2','WBC_diff',\
+                'pH_interval_f1','pH_interval_f2','pH_diff',\
+                'HR_mean','O2Sat_mean','SBP_mean','MAP_mean','Resp_mean',\
+                'HR_median','O2Sat_median','SBP_median','MAP_median','Resp_median',\
+                'HR_min','O2Sat_min','SBP_min','MAP_min','Resp_min',\
+                'HR_max','O2Sat_max','SBP_max','MAP_max','Resp_max',\
+                'HR_std','O2Sat_std','SBP_std','MAP_std','Resp_std',\
+                'HR_dstd','O2Sat_dstd','SBP_dstd','MAP_dstd','Resp_dstd',\
+                'HR_score','Temp_score','Resp_score','MAP_score','Creatinine_score','qsofa','Platelets_score','Bilirubin_score','SIRS']
+
 
 def connect(url, username, password):
     response = requests.get(url,auth=HTTPBasicAuth(username, password), verify=True)
@@ -82,40 +130,7 @@ def run(test_data):
 
     test_data = ml.data_clean(test_data, thresh)
     
-    variables = ['HR',
-                 'O2Sat',
-                 'Temp',
-                 'SBP',
-                 'MAP',
-                 'DBP',
-                 'Resp',
-                 'EtCO2',
-                 'AST',
-                 'Alkalinephos',
-                 'BUN',
-                 'BaseExcess',
-                 'Bilirubin_total',
-                 'Calcium',
-                 'Chloride',
-                 'Creatinine',
-                 'FiO2',
-                 'Glucose',
-                 'HCO3',
-                 'Hct',
-                 'Hgb',
-                 'Lactate',
-                 'Magnesium',
-                 'PTT',
-                 'PaCO2',
-                 'PaO2',
-                 'Phosphate',
-                 'Platelets',
-                 'Potassium',
-                 'SaO2',
-                 'Sodium',
-                 'WBC',
-                 'pH',
-                 'gcs_total_score']
+    variables = total_feature_list[:34]
     
     demographics = ["pat_id", "csn", "age", "is_female"]
     
@@ -125,7 +140,7 @@ def run(test_data):
     
     test_data = ml.resampling(test_data)
     test_data = test_data.groupby(["pat_id", "csn"]).apply(lambda v: ml.rolling_overlap(v, 6, variables, 3))
-    test_data = test_data.drop(["pat_id", "csn"], axis = 1).reset_index(drop = False).rename(columns = {"level_2" : "LOS"})
+    test_data = test_data.drop(["pat_id", "csn"], axis = 1).reset_index(drop = False).rename(columns = {"level_2" : "los"})
     test_data = test_data.merge(stat, on = ["pat_id", "csn"], how = "left")
   
     return test_data
@@ -150,16 +165,12 @@ def select_process_data(test_data, current_time):
     return final_test
     
 def get_hist_data(test_data, current_time):
+    
     hist_data = test_data.copy()
     hist_data["past_time"] = (current_time - hist_data["recorded_time"]).dt.total_seconds()/3600
-   
-    g = ['AST', 'Alkalinephos', 'BUN',
-       'Bilirubin_total', 'Calcium', 'Chloride', 'Creatinine', 'EtCO2',
-       'Glucose', 'HR', 'Hct', 'Hgb', 'Magnesium', 'O2Sat', 'Phosphate',
-       'Platelets', 'Potassium', 'Resp', 'Sodium', 'Temp', 'WBC',
-       'gcs_total_score', 'PTT', 'BaseExcess', 'HCO3', 'PaCO2', 'Lactate', 'PaO2', 'SaO2', 'pH',
-       'FiO2', 'SBP', 'DBP', 'MAP']
     
+    g= total_feature_list[:34]
+   
     hist_data[g] = hist_data[g].notnull().astype('int')
 
     t = hist_data["past_time"].values
@@ -172,18 +183,20 @@ def get_hist_data(test_data, current_time):
     hist_data[g] = hist_data.groupby(by = ["csn", "pat_id"])[g].fillna(method = 'ffill')
     
     hist_data.drop_duplicates(subset = ["csn", "pat_id"], keep = "last", inplace = True)
-    add_cols = ["PaO2_interval_f1", "PaO2_interval_f2", "PaO2_diff", "Sodium_interval_f1", "Sodium_interval_f2", "Sodium_diff", 'age','HR_interval_f1', 'HR_interval_f2', 'HR_diff', 'O2Sat_interval_f1', 'O2Sat_interval_f2', 'O2Sat_diff', 'Temp_interval_f1', 'Temp_interval_f2', 'Temp_diff', 'SBP_interval_f1', 'SBP_interval_f2', 'SBP_diff', 'MAP_interval_f1', 'MAP_interval_f2', 'MAP_diff', 'DBP_interval_f1', 'DBP_interval_f2', 'DBP_diff', 'Resp_interval_f1', 'Resp_interval_f2', 'Resp_diff', 'EtCO2_interval_f1', 'EtCO2_interval_f2', 'EtCO2_diff', 'BaseExcess_interval_f1', 'BaseExcess_interval_f2', 'BaseExcess_diff', 'HCO3_interval_f1', 'HCO3_interval_f2', 'HCO3_diff', 'FiO2_interval_f1', 'FiO2_interval_f2', 'FiO2_diff', 'pH_interval_f1', 'pH_interval_f2', 'pH_diff', 'PaCO2_interval_f1', 'PaCO2_interval_f2', 'PaCO2_diff', 'SaO2_interval_f1', 'SaO2_interval_f2', 'SaO2_diff', 'AST_interval_f1', 'AST_interval_f2', 'AST_diff', 'BUN_interval_f1', 'BUN_interval_f2', 'BUN_diff', 'Alkalinephos_interval_f1', 'Alkalinephos_interval_f2', 'Alkalinephos_diff', 'Calcium_interval_f1', 'Calcium_interval_f2', 'Calcium_diff', 'Chloride_interval_f1', 'Chloride_interval_f2', 'Chloride_diff', 'Creatinine_interval_f1', 'Creatinine_interval_f2', 'Creatinine_diff', 'Glucose_interval_f1', 'Glucose_interval_f2', 'Glucose_diff', 'Lactate_interval_f1', 'Lactate_interval_f2', 'Lactate_diff', 'Magnesium_interval_f1', 'Magnesium_interval_f2', 'Magnesium_diff', 'Phosphate_interval_f1', 'Phosphate_interval_f2', 'Phosphate_diff', 'Potassium_interval_f1', 'Potassium_interval_f2', 'Potassium_diff', 'Bilirubin_total_interval_f1', 'Bilirubin_total_interval_f2', 'Bilirubin_total_diff', 'Hct_interval_f1', 'Hct_interval_f2', 'Hct_diff', 'Hgb_interval_f1', 'Hgb_interval_f2', 'Hgb_diff', 'PTT_interval_f1', 'PTT_interval_f2', 'PTT_diff', 'WBC_interval_f1', 'WBC_interval_f2', 'WBC_diff', 'Platelets_interval_f1', 'Platelets_interval_f2', 'Platelets_diff', 'HR_mean', 'O2Sat_mean', 'SBP_mean', 'MAP_mean', 'Resp_mean', 'HR_median', 'O2Sat_median', 'SBP_median', 'MAP_median', 'Resp_median', 'HR_min', 'O2Sat_min', 'SBP_min', 'MAP_min', 'Resp_min', 'HR_max', 'O2Sat_max', 'SBP_max', 'MAP_max', 'Resp_max', 'HR_std', 'O2Sat_std', 'SBP_std', 'MAP_std', 'Resp_std', 'HR_dstd', 'O2Sat_dstd', 'SBP_dstd', 'MAP_dstd', 'Resp_dstd', 'HR_score', 'Temp_score', 'Resp_score', 'MAP_score', 'Creatinine_score', 'qsofa', 'Platelets_score', 'Bilirubin_score']
-
+    
+    add_cols = total_feature_list[34:]
+    
     nan_df = pd.DataFrame(columns = add_cols)
 
     hist_data = pd.concat([hist_data, nan_df])
     hist_data.iloc[:,3:] = round(hist_data.iloc[:,3:],3)
-    hist_data.loc[:,"age"] = np.nan
+    
     return hist_data
 
     
 
 if __name__ == "__main__":
+    
 
     # get user input parameters
     parser = argparse.ArgumentParser("real-time sepsis model run")
@@ -215,11 +228,10 @@ if __name__ == "__main__":
                                             "arrive_dt_tm": "hospital_admission_date_time",
                                             "event_start_dt_tm": "recorded_time"})
 
-    # convert days to ETC but w/o time zone
+    # convert days to ET but w/o time zone
     for col in ["recorded_time", "hospital_admission_date_time", "birth_dt_tm"]:
         test_data[col] = pd.to_datetime(test_data[col]).dt.tz_convert('US/Eastern')
         test_data[col] = test_data[col].dt.tz_localize(None)
-    
     
     
     
@@ -263,19 +275,16 @@ if __name__ == "__main__":
     test_data["MAP"] = test_data["MAP"].fillna(test_data["MAP_Cuff"])
     test_data["DBP"] = test_data["DBP"].fillna(test_data["DBP_Cuff"])
     
-    test_data = test_data.drop(["SBP_Cuff", "MAP_Cuff", "DBP_Cuff", "Fibrinogen"], axis = 1)
-    
-    
+    temp_test_data = test_data.loc[:,["pat_id", "csn", "recorded_time"] + total_feature_list[:34]].copy()
     ### SAVE HISTORICAL DATA ###
-    hist_data = get_hist_data(test_data, current_time).reset_index(drop = True)
-
+    hist_data = get_hist_data(temp_test_data, current_time).reset_index(drop = True)
     
     ### RUN MODEL PREPROCESSING ###
     
     print(len(test_data))
     
+    test_data = test_data[["csn", "pat_id", "recorded_time", "hospital_admission_date_time"] + total_feature_list[:36]].copy()
     test_data = run(test_data)
-    test_data = test_data.rename(columns = {"LOS": "los"})
     
     print("completed preprocessing")
     #test_data.to_csv("test_data_saved_debug.csv", index = False)
@@ -283,18 +292,46 @@ if __name__ == "__main__":
 
     keep_csns = list(test_data.csn.unique())
     
+    
+    ### TESTING ###
+    #print(list(test_data.columns))
+    test_data = ml.preprocess(test_data)
+    #print(list(test_data.columns))
+
+    test_data = test_data.sort_values("rel_time", ascending = True).drop_duplicates(subset = ["csn", "pat_id"], keep = "last")
+    #test_data = test_data[total_feature_list]
+    #test_data.to_csv("test_data_debug.csv",index = False)
+    test_set = list(test_data.csn.unique())
+    model_path = args.model_dir
+   
+    #test_data = test_data.iloc[:500]
+
+    test_set = list(test_data.csn.unique())
+    model_path = args.model_dir
+    drop_features = ['pat_id', 'csn', 'los', 'rel_time']
+
+    current_time_formatted = str(current_time.tz_localize("US/Eastern"))
+    current_time_formatted = current_time_formatted.replace(' ', 'T')
+
+    result = ml.predict(test_set, test_data, model_path, 0.48, \
+                        vm = True, drop_features = drop_features, \
+                        hist_data = hist_data, current_time = current_time_formatted)
+
+
+    print("completed model testing")
+
+    
+    
     ### read output and get historical data for future use ###
    
     url_output = 'https://prd-rta-app01.eushc.org:8443/ords/rta/sepsisml/outputcache'
     historical_output = connect(url_output, username, password)
-    #historical_output = pd.read_csv("result_debug.csv")
-    #historical_output = historical_output.rename(columns = {"PredictedProbability": "predictedprobability"})
-    #print(historical_output.columns) 
     historical_output = historical_output.dropna(subset = ["run_date", "predictedprobability"])
+    
     if len(historical_output) >0 :
         historical_output = historical_output.sort_values(by = "run_date", ascending = True)
         historical_output = historical_output[["csn", "pat_id", "predictedprobability", "run_date"]]
-
+        
         historical_output = historical_output.dropna().drop_duplicates(subset = ["csn", "pat_id"], keep = "last")
         historical_output = historical_output.rename(columns = {"predictedprobability": "PastProbability", "run_date": "PastRunDate"})
 
@@ -313,208 +350,19 @@ if __name__ == "__main__":
     #historical_output.to_csv("hist_data.csv")
     print("hist_data_saved")
     
-    ### TESTING ###
-    #print(test_data.columns)
-    test_data = ml.preprocess(test_data)
-
-
-    test_data = test_data.sort_values("rel_time", ascending = True).drop_duplicates(subset = ["csn", "pat_id"], keep = "last")
-    test_data = test_data[["csn", "pat_id", "los", "rel_time", 'HR',
- 'O2Sat',
- 'Temp',
- 'SBP',
- 'DBP',
- 'MAP',
- 'Resp',
- 'EtCO2',
- 'AST',
- 'Alkalinephos',
- 'BUN',
- 'BaseExcess',
- 'Bilirubin_total',
- 'Calcium',
- 'Chloride',
- 'Creatinine',
- 'FiO2',
- 'Glucose',
- 'HCO3',
- 'Hct',
- 'Hgb',
- 'Lactate',
- 'Magnesium',
- 'PTT',
- 'PaCO2',
- 'PaO2',
- 'Phosphate',
- 'Platelets',
- 'Potassium',
- 'SaO2',
- 'Sodium',
- 'WBC',
- 'pH',
- 'gcs_total_score',
- 'age',
- 'is_female',
- 'HR_interval_f1',
- 'HR_interval_f2',
- 'HR_diff',
- 'O2Sat_interval_f1',
- 'O2Sat_interval_f2',
- 'O2Sat_diff',
- 'Temp_interval_f1',
- 'Temp_interval_f2',
- 'Temp_diff',
- 'SBP_interval_f1',
- 'SBP_interval_f2',
- 'SBP_diff',
- 'MAP_interval_f1',
- 'MAP_interval_f2',
- 'MAP_diff',
- 'DBP_interval_f1',
- 'DBP_interval_f2',
- 'DBP_diff',
- 'Resp_interval_f1',
- 'Resp_interval_f2',
- 'Resp_diff',
- 'EtCO2_interval_f1',
- 'EtCO2_interval_f2',
- 'EtCO2_diff',
- 'AST_interval_f1',
- 'AST_interval_f2',
- 'AST_diff',
- 'Alkalinephos_interval_f1',
- 'Alkalinephos_interval_f2',
- 'Alkalinephos_diff',
- 'BUN_interval_f1',
- 'BUN_interval_f2',
- 'BUN_diff',
- 'BaseExcess_interval_f1',
- 'BaseExcess_interval_f2',
- 'BaseExcess_diff',
- 'Bilirubin_total_interval_f1',
- 'Bilirubin_total_interval_f2',
- 'Bilirubin_total_diff',
- 'Calcium_interval_f1',
- 'Calcium_interval_f2',
- 'Calcium_diff',
- 'Chloride_interval_f1',
- 'Chloride_interval_f2',
- 'Chloride_diff',
- 'Creatinine_interval_f1',
- 'Creatinine_interval_f2',
- 'Creatinine_diff',
- 'FiO2_interval_f1',
- 'FiO2_interval_f2',
- 'FiO2_diff',
- 'Glucose_interval_f1',
- 'Glucose_interval_f2',
- 'Glucose_diff',
- 'HCO3_interval_f1',
- 'HCO3_interval_f2',
- 'HCO3_diff',
- 'Hct_interval_f1',
- 'Hct_interval_f2',
- 'Hct_diff',
- 'Hgb_interval_f1',
- 'Hgb_interval_f2',
- 'Hgb_diff',
- 'Lactate_interval_f1',
- 'Lactate_interval_f2',
- 'Lactate_diff',
- 'Magnesium_interval_f1',
- 'Magnesium_interval_f2',
- 'Magnesium_diff',
- 'PTT_interval_f1',
- 'PTT_interval_f2',
- 'PTT_diff',
- 'PaCO2_interval_f1',
- 'PaCO2_interval_f2',
- 'PaCO2_diff',
- 'PaO2_interval_f1',
- 'PaO2_interval_f2',
- 'PaO2_diff',
- 'Phosphate_interval_f1',
- 'Phosphate_interval_f2',
- 'Phosphate_diff',
- 'Platelets_interval_f1',
- 'Platelets_interval_f2',
- 'Platelets_diff',
- 'Potassium_interval_f1',
- 'Potassium_interval_f2',
- 'Potassium_diff',
- 'SaO2_interval_f1',
- 'SaO2_interval_f2',
- 'SaO2_diff',
- 'Sodium_interval_f1',
- 'Sodium_interval_f2',
- 'Sodium_diff',
- 'WBC_interval_f1',
- 'WBC_interval_f2',
- 'WBC_diff',
- 'pH_interval_f1',
- 'pH_interval_f2',
- 'pH_diff',
- 'HR_mean',
- 'O2Sat_mean',
- 'SBP_mean',
- 'MAP_mean',
- 'Resp_mean',
- 'HR_median',
- 'O2Sat_median',
- 'SBP_median',
- 'MAP_median',
- 'Resp_median',
- 'HR_min',
- 'O2Sat_min',
- 'SBP_min',
- 'MAP_min',
- 'Resp_min',
- 'HR_max',
- 'O2Sat_max',
- 'SBP_max',
- 'MAP_max',
- 'Resp_max',
- 'HR_std',
- 'O2Sat_std',
- 'SBP_std',
- 'MAP_std',
- 'Resp_std',
- 'HR_dstd',
- 'O2Sat_dstd',
- 'SBP_dstd',
- 'MAP_dstd',
- 'Resp_dstd',
- 'HR_score',
- 'Temp_score',
- 'Resp_score',
- 'MAP_score',
- 'Creatinine_score',
- 'qsofa',
- 'Platelets_score',
- 'Bilirubin_score']]
-    #test_data.to_csv("test_data_debug.csv",index = False)
-    test_set = list(test_data.csn.unique())
-    model_path = args.model_dir
-   
-    #test_data = test_data.iloc[:500]
-
-    current_time_formatted = str(current_time.tz_localize("US/Eastern"))
-    current_time_formatted = current_time_formatted.replace(' ', 'T')
-    print(list(test_data.columns))
-    result = ml.predict(test_set, test_data, model_path, 0.48, hist_data, current_time_formatted)
-    result = result.rename(columns = {"LOS": "los"})
-    #result = pd.concat([result, keep_data])
     
-    print("completed model testing")
-
   
     result = result.merge(historical_output, on = ["csn", "pat_id"], how = "left")
     #result.to_csv("result_debug.csv", index = False)
+    
+    
+    
+    
     result["PastProbability"] = pd.to_numeric(result["PastProbability"]) 
     result["prob_diff"] = round((result["PredictedProbability"] - result["PastProbability"])*100, 2)
     
-    result["PreviousAlert"] = round(result["PastProbability"] * 100, 2).astype(str) + '% ' + (result["prob_diff"]).map('({0:+}%)'.format)
-    
+    result["PreviousAlert"] = round(result["PastProbability"] * 100, 2).astype(str) + '% '
+    result["changefromprevious"] = (result["prob_diff"]).map('{0:+}%'.format)
     
     result["run_date_relative"] = result["rel_time"]
     
@@ -527,6 +375,7 @@ if __name__ == "__main__":
     result["run_date"] = current_time_formatted
                                        
     result["PriorAlertTime"] = result["PastRunDate"] + " " + (result["past_curr_diff"]).map('({:,.2f} hrs ago)'.format)
+    
     result = result.drop(["past_curr_diff", "prob_diff", "PastRunDate", "PastProbability"], axis = 1)
     result = result.rename(columns = {"PreviousAlert": "previousalert", "PriorAlertTime": "prioralerttime"})
     result = result.drop(["ranked_shap"], axis = 1)
@@ -534,7 +383,9 @@ if __name__ == "__main__":
     
     ### UPLOAD OUTPUT TO DATABASE ###
     ### DEBUG PURPOSE ###
-
+    
+    result = result.reset_index(drop = True)
+    
     result.to_csv("result_debug.csv", index = False) 
     result = pd.read_csv("result_debug.csv")
     ### @# DEBUG PURPSE ###

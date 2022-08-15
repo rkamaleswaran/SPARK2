@@ -13,25 +13,27 @@ from tqdm import tqdm
 import base64
 import json
 import shap
-import numpy as np, os, sys
 
 def upload(url, username, password, output):
     response = requests.post(url,auth=HTTPBasicAuth(username, password), verify=True, data = output, headers = {"Content-Type": "application/json"})
 
 
-##### CLEANING ALGORITHMS #####
+    
+sep_index = ['AST', 'Alkalinephos', 'BUN', \
+             'BaseExcess',  'Bilirubin_total', 'Calcium',\
+             'Chloride', 'Creatinine', 'FiO2', \
+             'Glucose', 'HCO3', 'Hct', \
+             'Hgb', 'Lactate', 'Magnesium', \
+             'PTT', 'PaCO2', 'PaO2', 'Phosphate',\
+             'Platelets','Potassium', 'SaO2',\
+             'Sodium','WBC', 'pH']
 
-sep_index = ['BaseExcess', 'HCO3', 'FiO2', 'pH', 'PaCO2', 'SaO2', 'AST',
-             'BUN', 'Alkalinephos', 'Calcium', 'Chloride', 'Creatinine',
-             'Glucose', 'Lactate', 'Magnesium', 'Phosphate', 'Potassium',
-             'Bilirubin_total', 'Hct', 'Hgb', 'PTT', 'WBC', 'Platelets', 'Sodium', 'PaO2']
 con_index = ['HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2']
-
-demographics = ["age", "gender"]
-
-
-def resampling(new_merged):
+dem_index = ['age', 'is_female', 'gcs_total_score']
+    
+def resampling(merged):
     # random origin
+    new_merged = merged.copy()
     origin = pd.to_datetime("2000-01-01")
 
     # sort index
@@ -59,11 +61,9 @@ def data_clean(chunk, thresholds):
 
 
 
-
 def rolling_overlap(temp, window, variables, overlap):
     rolled= temp.copy()
     rolled[variables] = rolled.rolling(window, min_periods = 1)[variables].aggregate("median")
-    #rolled[bed_var] = rolled.rolling(window, min_periods = 1)[bed_var].aggregate("max")
     rolled = rolled.reset_index(drop = True)
     start = window - 1
     return rolled.iloc[0::overlap]
@@ -100,31 +100,50 @@ def feature_informative_missingness(patient, sep_columns = con_index + sep_index
         
     return patient
 
-def feature_slide_window(vitals):
+def feature_slide_window(vitals, vm):
 
-    diff = vitals.shift(-1) - vitals
+    diff = (vitals.shift(-1) - vitals).copy()
     rolling_mean = vitals.copy()
     rolling_mean = rolling_mean.groupby("csn").rolling(6, min_periods = 1).mean().reset_index(drop = True)
-    rolling_mean = rolling_mean.rename(columns = {'HR': "HR_mean", 'O2Sat': "O2Sat_mean", 'SBP':"SBP_mean", 
-                                                  'MAP': "MAP_mean", 'Resp': "Resp_mean"})
-    rolling_median = vitals.groupby("csn").rolling(6, min_periods = 1).median().reset_index(drop = True)
+    rolling_mean = rolling_mean.rename(columns = {'HR': "HR_mean", 'O2Sat': "O2Sat_mean", 'SBP':"SBP_mean", 'MAP': "MAP_mean", 'Resp': "Resp_mean"})
+    if vm == False:
+        rolling_mean.drop(["csn"], axis = 1, inplace = True)
+        
+    rolling_median = vitals.copy()
+    rolling_median = rolling_median.groupby("csn").rolling(6, min_periods = 1).median().reset_index(drop = True)
     rolling_median = rolling_median.rename(columns = {'HR': "HR_median", 'O2Sat': "O2Sat_median", 'SBP':"SBP_median", 
                                                   'MAP': "MAP_median", 'Resp': "Resp_median"})
-    rolling_min = vitals.groupby("csn").rolling(6, min_periods = 1).min().reset_index(drop = True)
+    
+    if vm == False:
+        rolling_median.drop(["csn"], axis = 1, inplace = True)
+    
+    rolling_min = vitals.copy()
+    rolling_min = rolling_min.groupby("csn").rolling(6, min_periods = 1).min().reset_index(drop = True)
     rolling_min = rolling_min.rename(columns = {'HR': "HR_min", 'O2Sat': "O2Sat_min", 'SBP':"SBP_min", 
                                                   'MAP': "MAP_min", 'Resp': "Resp_min"})
-
-    rolling_max = vitals.groupby("csn").rolling(6, min_periods = 1).max().reset_index(drop = True)
+    if vm == False:
+        rolling_min.drop(["csn"], axis = 1, inplace = True)
+    
+    rolling_max = vitals.copy()
+    rolling_max = rolling_max.groupby("csn").rolling(6, min_periods = 1).max().reset_index(drop = True)
     rolling_max = rolling_max.rename(columns = {'HR': "HR_max", 'O2Sat': "O2Sat_max", 'SBP':"SBP_max", 
                                                   'MAP': "MAP_max", 'Resp': "Resp_max"})
-
-    rolling_std = vitals.groupby("csn").rolling(6, min_periods = 1).std().reset_index(drop = True)
+    if vm == False:
+        rolling_max.drop(["csn"], axis = 1, inplace = True)
+    
+    rolling_std = vitals.copy()
+    rolling_std = rolling_std.groupby("csn").rolling(6, min_periods = 1).std().reset_index(drop = True)
     rolling_std = rolling_std.rename(columns = {'HR': "HR_std", 'O2Sat': "O2Sat_std", 'SBP':"SBP_std", 
                                                   'MAP': "MAP_std", 'Resp': "Resp_std"})
+    if vm == False:
+        rolling_std.drop(["csn"], axis = 1, inplace = True)
+    
 
     rolling_diff_std = diff.groupby("csn").rolling(6, min_periods = 1).std().reset_index(drop = True)
     rolling_diff_std = rolling_diff_std.rename(columns = {'HR': "HR_dstd", 'O2Sat': "O2Sat_dstd", 'SBP':"SBP_dstd", 
                                                   'MAP': "MAP_dstd", 'Resp': "Resp_dstd"})
+    if vm == False:
+        rolling_diff_std.drop(["csn"], axis = 1, inplace = True)
 
     rolling_vitals = pd.concat([rolling_mean, rolling_median, rolling_min, rolling_max, rolling_std, rolling_diff_std], axis = 1)
     
@@ -242,35 +261,14 @@ def feature_empiric_score(temp):
     temp.loc[mask, "Bilirubin_score"] = 0
     temp.loc[temp["Bilirubin_total"].isna(),"Bilirubin_score"] = np.nan
     
-    #temp["SIRS"] = SIRS(temp)
-    #temp["tachycardia"] = 0
-    #mask = (temp["HR"] > 90)
-    #temp.loc[mask,"tachycardia"] = 1
-    
-    #temp["tachypnea"] = 0
-    #mask = (temp["Resp"] > 20)
-    #temp.loc[mask,"tachypnea"] = 1
-
-    #temp["fever/hypothermia"] = 0
-    #mask = (temp["Temp"] > 38) |(temp["Temp"] < 36)
-    #temp.loc[mask, "fever/hypothermia"] = 1
-    
-    #temp["wbc"] = 0
-    #mask = (temp["WBC"] > 12) | (temp["WBC"] < 4)
-    #temp.loc[mask, "wbc"] = 1
-
-    #temp["SIRS"] = temp[["tachycardia", "tachypnea", "fever/hypothermia", "wbc"]].sum(axis = 1)
-    #temp = temp.drop(["tachycardia", "fever/hypothermia", "wbc",  "tachypnea"], axis = 1) 
-    
-    
-    
+    temp["SIRS"] = SIRS(temp)
     
     return(temp)
 
 
 # 62 informative missingness features, 31 differential features and 37 raw variables
 
-def preprocess(df_process):
+def preprocess(df_process, vm = True):
     
     #print(len(df_process.columns)) 
     print("Extracting informative features")
@@ -283,29 +281,24 @@ def preprocess(df_process):
             pbar.update(1)
             
     temp = pd.concat(groups).reset_index(drop = True)
-    
     print("Completed Extracting informative features")
-    #print(len(temp.columns))
+    
     temp = temp.fillna(method='ffill').reset_index(drop = True)
-    #print(len(temp.columns))
     print("Extracting Rolling features")
     
     vitals = temp.copy()
     vitals = vitals[["csn", 'HR', 'O2Sat', 'SBP', 'MAP', 'Resp']]
-    vitals = feature_slide_window(vitals).reset_index(drop = True)
-    #print("vitals:", list(vitals.columns))
-    #print(len(vitals.columns))
-    #vitals = feature_slide_window(vitals).reset_index(drop = True).drop(["csn"], axis = 1)
+    vitals = feature_slide_window(vitals, vm).reset_index(drop = True)
     print("Completed Extracting Rolling features")
     
     new = pd.concat([temp, vitals], axis = 1)
-    #print(len(new.columns))
 
-    # add 8 empiric features scorings
+    # add 9 empiric features scorings
     print("Extracting Score Features")
     
     new = feature_empiric_score(new)
     print("Completed Extracting Score Features")
+    
     print("Preprocessing completed with total of", len(list(new.columns)), "features")
         
     return new
@@ -338,67 +331,74 @@ def predict(data_set,
             data_dir,
             model_path,
             risk_threshold,
-            hist_data,
-            current_time):
+            vm = True,
+            drop_features = [],
+            hist_data = '',
+            current_time = ''):
   
     patient_df = data_dir.copy()
-    new_set = patient_df.drop(["csn", "pat_id", "los", "rel_time"], axis = 1).copy()
+    new_set = patient_df.drop(drop_features, axis = 1).copy()
+    print(len(new_set.columns))
     features = new_set.values
     feature_names = np.array(new_set.columns)
     
     predict_pro, shaps, exp = load_model_predict(features, k_fold = 5, path = './' + model_path + '/')
-    output_img_df = pd.DataFrame(columns = {"csn", "pat_id", "los", "content_type", "run_date", "run_date_relative", "img_content"})
-    for i in range(0, len(new_set)):
-        shap.force_plot(exp, shaps[i,:], new_set.iloc[i,:], matplotlib = True, show = False)
-            
-        pt_csn = patient_df.iloc[i, 0]
-        pt_pat_id = patient_df.iloc[i, 1]
-        pt_los = patient_df.iloc[i, 2]
-        plt.savefig("temp.png")
-        plt.close()
+    
+    if vm == True:
+        output_img_df = pd.DataFrame(columns = {"csn", "pat_id", "los", "content_type", "run_date", "run_date_relative", "img_content"})
+        for i in range(0, len(new_set)):
+            shap.force_plot(exp, shaps[i,:], new_set.iloc[i,:], matplotlib = True, show = False)
 
-        with open("temp.png", mode = 'rb') as file:
-            img = file.read()
-            encoded_string = base64.b64encode(img)
-            encoded_string = str(encoded_string)[2:-1]
+            pt_csn = patient_df.iloc[i, 0]
+            pt_pat_id = patient_df.iloc[i, 1]
+            pt_los = patient_df.iloc[i, 2]
+            plt.savefig("temp.png")
+            plt.close()
 
-        output = {"csn": str(pt_csn), "pat_id": str(pt_pat_id), "los": int(pt_los), "content_type": "image/png"}
-        output["run_date"] = current_time
-        output["run_date_relative"] = str(patient_df.iloc[i, 3])
-        output["img_content"] = encoded_string
-        upload(url = "https://prd-rta-app01.eushc.org:8443/ords/rta/sepsisml/imgcache", username = 'Sepsis_ML', password = 'jfVDS756F$jkf&@*', output = json.dumps(output))
-        #output_img_df.loc[i] = output
-        
-    ### TOP 10 MOST **POSITIVIE** IMPACT ### -- change if needed
-    hist_times = hist_data[list(feature_names)].values
-    
-    shaps = np.array(shaps)
-    sort_index = (-shaps).argsort(axis = 1)
-    ranked_shap = shaps[np.arange(len(shaps))[:,None], sort_index]
-    
-    top_10 = sort_index[:, :10]
-    top_10_features = feature_names[top_10]
-    
-    top_10_hist_times = hist_times[np.arange(len(shaps))[:,None],top_10]
+            with open("temp.png", mode = 'rb') as file:
+                img = file.read()
+                encoded_string = str(img)
+                #encoded_string = base64.b64encode(img)
+                #encoded_string = str(encoded_string)[2:-1]
 
-    top_10_str_list = []
-    for a,b in zip(top_10_features,top_10_hist_times):
-        top_10_str = ''
-        for i,j in zip(a,b):
-            top_10_str += i+ "(" +str(j) + "), "
-        top_10_str_list.append([top_10_str])
-  
-    
-    
+            output = {"csn": str(pt_csn), "pat_id": str(pt_pat_id), "los": int(pt_los), "content_type": "image/png"}
+            output["run_date"] = current_time
+            output["run_date_relative"] = str(patient_df.iloc[i, 3])
+            output["img_content"] = encoded_string
+            upload(url = "https://prd-rta-app01.eushc.org:8443/ords/rta/sepsisml/imgcache", username = 'Sepsis_ML', password = 'jfVDS756F$jkf&@*', output = json.dumps(output))
+            #output_img_df.loc[i] = output
+
+        ### TOP 10 MOST **POSITIVIE** IMPACT ### -- change if needed
+        hist_times = hist_data[list(feature_names)].values
+
+        shaps = np.array(shaps)
+        sort_index = (-shaps).argsort(axis = 1)
+        ranked_shap = shaps[np.arange(len(shaps))[:,None], sort_index]
+
+        top_10 = sort_index[:, :10]
+        top_10_features = feature_names[top_10]
+
+        top_10_hist_times = hist_times[np.arange(len(shaps))[:,None],top_10]
+
+        top_10_str_list = []
+        for a,b in zip(top_10_features,top_10_hist_times):
+            top_10_str = ''
+            for i,j in zip(a,b):
+                top_10_str += i+ "(" +str(j) + "), "
+            top_10_str_list.append([top_10_str])
+
+
+
     PredictedProbability = np.array(predict_pro)
     PredictedLabel = [0 if i <= risk_threshold else 1 for i in predict_pro]
         
-    temp_result = patient_df[["csn", "pat_id", "los", "rel_time"]].copy().reset_index(drop = True)
+    temp_result = patient_df[drop_features].copy().reset_index(drop = True)
         
     temp_result["PredictedProbability"] = PredictedProbability
     temp_result["PredictedSepsisLabel"] = PredictedLabel
-    temp_result["ranked_shap"] = pd.Series(list(ranked_shap)).astype(str)
-    temp_result["shap"] = pd.Series(top_10_str_list)
-    #output_img_df.to_csv("img_output_debug.csv", index= False)
+    if vm == True:
+        temp_result["ranked_shap"] = pd.Series(list(ranked_shap)).astype(str)
+        temp_result["shap"] = pd.Series(top_10_str_list)
+
     return temp_result
         
