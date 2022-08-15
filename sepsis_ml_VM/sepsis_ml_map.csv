@@ -1,0 +1,82 @@
+﻿LOINC_CD,Category,Lab_Name,event_cd
+14979-9,PTT,Partial Thromboplastin Time,1513062
+14979-9,PTT,Partial Thromboplastin Time,1513062
+17861-6,Calcium,Calcium Level Total,1514676
+17861-6,Calcium,Calcium Level Total,1514676
+19123-9,Magnesium,Magnesium Level (mg/dl),257696134
+19123-9,Magnesium,Magnesium Level (mg/dl),257696134
+1920-8,AST,Aspartate Aminotransferase,1514885
+1925-7,BaseExcess,"Base Excess, Blood Gas, POCT",116559600
+1959-6,HCO3,"HCO3, Venous OR",665495419
+1959-6,HCO3,"Bicarbonate, Mixed V - Anes",665486990
+1959-6,HCO3,"Bicarbonate, Art - Resp",665486994
+1959-6,HCO3,OR VEN BICARB,668023039
+1959-6,HCO3,"Bicarbonate, Art - Resp",665486994
+1975-2,Bilirubin_total,Bilirubin Total,1512680
+2019-8,PaCO2,"pCO2, Arterial, POCT",116558758
+2019-8,PaCO2,OR ART PCO2,668022811
+2019-8,PaCO2,"pCO2, Art - Anes",665492721
+2019-8,PaCO2,"pCO2, Art - Resp",665486922
+2019-8,PaCO2,"PCO2, Arterial CLH",1513281
+2019-8,PaCO2,"pCO2, Arterial, POCT",116558758
+2019-8,PaCO2,OR ART PCO2,668022811
+2019-8,PaCO2,"pCO2, Art - Anes",665492721
+2019-8,PaCO2,"pCO2, Art - Resp",665486922
+2019-8,PaCO2,"PCO2, Arterial CLH",1513281
+2075-0,Chloride,Chloride Level,1514550
+2160-0,Creatinine,Creatinine,1514422
+2345-7,Glucose,Glucose,1513981
+2518-9,Lactate,"Lactate, Arterial",1291847774
+2518-9,Lactate,"Lactate, Arterial, POCT",749082270
+2518-9,Lactate,BG-Lactate,1516153
+2703-7,PaO2,"pO2, Art - Anes",665486946
+2703-7,PaO2,"PO2, Arterial CLH",1513205
+2703-7,PaO2,"pO2, Art - Resp",665486958
+2703-7,PaO2,OR ART PO2,668022817
+2703-7,PaO2,OR ART O2 CONTENT,651859059
+2703-7,PaO2,"pO2, Arterial, POCT",116559099
+2708-6,SaO2,"O2 Saturation, Arterial, POCT",116559775
+2708-6,SaO2,"O2 Saturation, Arterial CLH",1513337
+2708-6,SaO2,OR ART O2 SAT-meas,651859079
+2708-6,SaO2,"Oxygen Saturation, Art - Anes",665487086
+2744-1,pH,"pH, Art - Resp",665490931
+2744-1,pH,OR ART PH,668022776
+2744-1,pH,"pH, Art - Anes",665490849
+2744-1,pH,"PH, Arterial CLH",1513254
+2744-1,pH,"pH, Arterial, POCT",116558557
+2777-1,Phosphate,Phosphorus Level,1513243
+2823-3,Potassium,Potassium Level,1513627
+2951-2,Sodium,Sodium Level,1513370
+3094-0,BUN,Blood Urea Nitrogen,1514698
+3150-0,FiO2,"FiO2, Blood Gas, POCT",749082182
+3150-0,FiO2,FiO2 - Anes,665490260
+3150-0,FiO2,FiO2,1516149
+3255-7,Fibrinogen,Fibrinogen Level,1514115
+4544-3,Hct,"Hematocrit, OR",1513888
+4544-3,Hct,Hematocrit,1513889
+6690-2,WBC,White Blood Count,1512214
+6690-2,WBC,WBC,1512212
+6768-6,Alkalinephos,Alkaline Phosphatase,1514923
+718-7,Hgb,"Hemoglobin, OR",1513807
+718-7,Hgb,Total Hgb - Anes,665487054
+718-7,Hgb,OR ART HGB,651859087
+718-7,Hgb,OR VEN HGB,668023059
+718-7,Hgb,Hemoglobin,1513817
+718-7,Hgb,Total Hgb - Resp,665487058
+777-3,Platelets,Platelet Count,1513222
+777-3,Platelets,PRP Platelet Count,1513110
+777-3,Platelets,Platelet Count Citrated Plasma,1193690901
+,gcs_total_score,Glasgow Coma Score,2227158
+,EtCO2,ETCO2,1516159
+,EtCO2,Oxygen Flow Rate,2226304
+,Temp,Temperatur ©,380902603
+,HR,Heart Rate,10111319
+,O2Sat,O2 SAT,1516150
+,O2Sat,O2 Sat,671045
+,Resp,Resp,671042
+,SBP_Cuff,Systolic BP,671802
+,SBP,Systolic BP Arterial,394037800
+,DBP_Cuff,Diastolic BP,671811
+,DBP,Diastolic BP Arterial,394037811
+,MAP_Cuff,"MAP, Cuff",268390711
+,MAP,MAP Arterial,394037823
