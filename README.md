@@ -20,7 +20,7 @@ The Sepsis ML Model is an ensemble of five independently trained **XGBoost.** Ea
     - **2** **Demographics**: age, gender (is_female)
 - **30 Statistical features**: 18-hr sliding window based statistical features
     - _mean, _median, _min, _max, _std, _dstd
-    - *derived for common vital signs (HR, O2Sat, Temp, Resp, SBP, MAP, DBP)*
+    - *derived for common vital signs (HR, O2Sat, Temp, Resp, SBP, MAP)*
 - **99** **Missing value features & differential features**
     - 33 Measurement frequency sequence (_interval_f1): Records the number of variable measurements before the current time
     - 33 Measurement time interval sequence (_interval_f2): Records the time interval from the last measurement between the current time.
